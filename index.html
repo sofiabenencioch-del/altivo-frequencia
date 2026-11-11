@@ -1,0 +1,270 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Altivo Frequência</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f2f7ff;
+      color: #243653;
+    }
+    header {
+      background: linear-gradient(120deg, #2458bc, #12b8b0);
+      color: white;
+      padding: 35px 20px;
+      text-align: center;
+    }
+    header h1 { margin: 0 0 10px; }
+    main { max-width: 1000px; margin: auto; padding: 24px; }
+    .card {
+      background: white;
+      border-radius: 18px;
+      padding: 22px;
+      margin-bottom: 18px;
+      box-shadow: 0 3px 12px #20305012;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+    }
+    .stat { border-radius: 14px; padding: 20px; }
+    .blue { background: #dbeaff; }
+    .green { background: #d6f6e8; }
+    .yellow { background: #fff0bd; }
+    .pink { background: #ffe0e7; }
+    button {
+      background: #2458bc;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 18px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    input, select {
+      padding: 11px;
+      border: 1px solid #ccd5e5;
+      border-radius: 9px;
+      margin: 5px;
+      max-width: 100%;
+    }
+    .student {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px;
+      border-bottom: 1px solid #eee;
+    }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📚 Altivo Frequência</h1>
+    <p>Escola Municipal Altivo César — Niterói</p>
+    <p>Gestão de Frequência Escolar</p>
+  </header>
+
+  <main>
+    <div class="card">
+      <h2>Bem-vindo!</h2>
+      <button onclick="mostrar('direcao')">🏫 Direção</button>
+      <button onclick="mostrar('professor')">✏️ Professor</button>
+    </div>
+
+    <section id="direcao">
+      <h2>📊 Painel da Direção</h2>
+      <div class="grid">
+        <div class="stat blue">
+          <h2 id="totalTurmas">3</h2>
+          <p>Turmas</p>
+        </div>
+        <div class="stat green">
+          <h2>3</h2>
+          <p>Professores</p>
+        </div>
+        <div class="stat yellow">
+          <h2 id="totalChamadas">0</h2>
+          <p>Registros de frequência</p>
+        </div>
+        <div class="stat pink">
+          <h2 id="media">—</h2>
+          <p>Presença registrada</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>➕ Cadastrar turma</h3>
+        <input id="novaTurma" placeholder="Ex.: 8º Ano A">
+        <button onclick="adicionarTurma()">Adicionar turma</button>
+        <ul id="listaTurmas"></ul>
+      </div>
+
+      <div class="card">
+        <h3>📋 Resumo de frequência</h3>
+        <div id="resumo">Nenhum registro realizado.</div>
+      </div>
+    </section>
+
+    <section id="professor" class="hidden">
+      <h2>✏️ Portal do Professor</h2>
+      <div class="card">
+        <label>Professor</label>
+        <select id="professorNome">
+          <option>Mariana Costa</option>
+          <option>João Pereira</option>
+          <option>Luciana Almeida</option>
+        </select>
+        <p>Turma</p>
+        <select id="turmaProfessor"></select>
+        <p>Data da aula</p>
+        <input id="dataAula" type="date">
+      </div>
+
+      <div class="card">
+        <h3>Registro de frequência</h3>
+        <div id="alunos"></div>
+        <button onclick="salvarFrequencia()">💾 Salvar registro</button>
+        <p id="mensagem"></p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const turmas = ["6º Ano A", "7º Ano B", "EJA - Turma 1"];
+    const alunos = [
+      "Ana Souza", "Bruno Lima", "Camila Oliveira",
+      "Daniel Santos", "Eduarda Ferreira"
+    ];
+    const registros = [];
+
+    document.getElementById("dataAula").value =
+      new Date().toLocaleDateString("en-CA");
+
+    function mostrar(perfil) {
+      document.getElementById("direcao")
+        .classList.toggle("hidden", perfil !== "direcao");
+      document.getElementById("professor")
+        .classList.toggle("hidden", perfil !== "professor");
+    }
+
+    function atualizarTurmas() {
+      document.getElementById("listaTurmas").innerHTML =
+        turmas.map(t => `<li>${t}</li>`).join("");
+
+      const select = document.getElementById("turmaProfessor");
+      select.replaceChildren();
+
+      turmas.forEach(t => {
+        const option = document.createElement("option");
+        option.value = t;
+        option.textContent = t;
+        select.appendChild(option);
+      });
+
+      document.getElementById("totalTurmas").textContent =
+        turmas.length;
+    }
+
+    function adicionarTurma() {
+      const campo = document.getElementById("novaTurma");
+      const nome = campo.value.trim();
+
+      if (!nome || turmas.includes(nome)) return;
+
+      turmas.push(nome);
+      campo.value = "";
+      atualizarTurmas();
+    }
+
+    function carregarAlunos() {
+      const lista = document.getElementById("alunos");
+      lista.replaceChildren();
+
+      alunos.forEach((nome, i) => {
+        const linha = document.createElement("div");
+        linha.className = "student";
+
+        const texto = document.createElement("span");
+        texto.textContent = nome;
+
+        const select = document.createElement("select");
+        select.id = "aluno" + i;
+
+        [["P", "Presente"], ["F", "Falta"],
+         ["J", "Justificada"]].forEach(([valor, rotulo]) => {
+          const option = document.createElement("option");
+          option.value = valor;
+          option.textContent = rotulo;
+          select.appendChild(option);
+        });
+
+        linha.append(texto, select);
+        lista.appendChild(linha);
+      });
+    }
+
+    function salvarFrequencia() {
+      const estados = alunos.map((_, i) =>
+        document.getElementById("aluno" + i).value
+      );
+
+      const registro = {
+        professor: document.getElementById("professorNome").value,
+        turma: document.getElementById("turmaProfessor").value,
+        data: document.getElementById("dataAula").value,
+        presentes: estados.filter(x => x === "P").length,
+        faltas: estados.filter(x => x === "F").length,
+        justificadas: estados.filter(x => x === "J").length
+      };
+
+      if (!registro.data) {
+        alert("Selecione a data da aula.");
+        return;
+      }
+
+      registros.push(registro);
+
+      document.getElementById("mensagem").textContent =
+        "Registro salvo nesta demonstração!";
+
+      atualizarPainel();
+    }
+
+    function atualizarPainel() {
+      document.getElementById("totalChamadas").textContent =
+        registros.length;
+
+      const presentes = registros.reduce(
+        (s, r) => s + r.presentes, 0
+      );
+      const total = registros.length * alunos.length;
+
+      document.getElementById("media").textContent =
+        total ? Math.round(presentes / total * 100) + "%" : "—";
+
+      const resumo = document.getElementById("resumo");
+      resumo.replaceChildren();
+
+      registros.forEach(r => {
+        const p = document.createElement("p");
+        p.textContent =
+          `${r.data} — ${r.turma} — ${r.professor}: ` +
+          `${r.presentes} presentes, ${r.faltas} faltas, ` +
+          `${r.justificadas} justificadas`;
+        resumo.appendChild(p);
+      });
+    }
+
+    atualizarTurmas();
+    carregarAlunos();
+  </script>
+</body>
+</html>
